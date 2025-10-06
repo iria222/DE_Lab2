@@ -97,4 +97,3 @@ CREATE TABLE IF NOT EXISTS results (
 
 
 ) ENGINE=InnoDB;
-

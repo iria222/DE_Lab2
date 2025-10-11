@@ -34,17 +34,17 @@ CREATE TABLE IF NOT EXISTS circuit (
   altitude FLOAT
 ) ENGINE=InnoDB;
 
-CREATE TABLE IF NOT EXISTS qualifyng (
-  qualifyng_id INT AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS qualifying (
+  qualifying_id INT AUTO_INCREMENT PRIMARY KEY,
   circuit_id INT,
   constructor_id INT,
   race_id INT,
   driver_id INT,
 
 
-  q1 TIME,
-  q2 TIME,
-  q3 TIME,
+  q1 VARCHAR(20),
+  q2 VARCHAR(20),
+  q3 VARCHAR(20),
   
   foreign key(circuit_id) references circuit(circuit_id),
   foreign key(constructor_id) references constructor(constructor_id),
@@ -64,6 +64,7 @@ CREATE TABLE IF NOT EXISTS pit_stops (
   stop_time TIME,
   stop_duration INT,
 
+  FOREIGN KEY(driver_id) REFERENCES driver(driver_id),
   foreign key(constructor_id) references constructor(constructor_id),
   foreign key(race_id) references race(race_id)
 ) ENGINE=InnoDB;

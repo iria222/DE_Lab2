@@ -194,13 +194,44 @@ if __name__ == '__main__':
     load_constructor_data(engine, prepare_constructor_data(constructor_data))
     load_race_data(engine, prepare_race_data(race_data))
     load_circuit_data(engine, prepare_circuit_data(circuit_data))
-    load_qualifying_data(engine, prepare_qualifying_data(qualifying_data))
-    load_pit_stops_data(engine, prepare_pit_stops_data(pit_stops_data))
+    # load_qualifying_data(engine, prepare_qualifying_data(qualifying_data))
+    # load_pit_stops_data(engine, prepare_pit_stops_data(pit_stops_data))
     load_status_data(engine, prepare_status_data(status_data))
-    load_results_data(engine, prepare_results_data(result_data))
+    # load_results_data(engine, prepare_results_data(result_data))
 
 
 
+    # Read the dimension tables to get the IDs and add them to the fact tables
+
+    race_db =  pd.read_sql('SELECT * FROM race', con=engine)
+    driver_db = pd.read_sql('SELECT * FROM driver', con=engine)
+    constructor_db = pd.read_sql('SELECT * FROM constructor', con=engine)
+    status_db = pd.read_sql('SELECT * FROM status', con=engine)
+    circuit_db = pd.read_sql('SELECT * FROM circuit', con=engine)
+
+    # facts_qualifying_data = prepare_qualifying_data(qualifying_data, circuit_db, constructor_db, race_db, driver_db)
+    # fact_pit_stops_data = prepare_pit_stops_data(pit_stops_data, constructor_db, race_db, driver_db)
+    # facts_results_data = prepare_results_data(result_data, circuit_db, constructor_db, race_db, driver_db, status_db)
+
+
+    facts_qualifying_data = prepare_qualifying_data(
+        qualifying_data, driver_data, constructor_data, race_data, circuit_data,
+        circuit_db, constructor_db, race_db, driver_db
+    )
+    
+    fact_pit_stops_data = prepare_pit_stops_data(
+        pit_stops_data, driver_data, constructor_data, race_data,
+        constructor_db, race_db, driver_db
+    )
+    
+    facts_results_data = prepare_results_data(
+        result_data, driver_data, constructor_data, race_data, circuit_data, status_data,
+        circuit_db, constructor_db, race_db, driver_db, status_db
+    )
+
+    load_qualifying_data(engine, facts_qualifying_data)
+    load_pit_stops_data(engine, fact_pit_stops_data)
+    load_results_data(engine, facts_results_data)
 
     # # Read the dimension tables to get the IDs and add them to the fact table
     # airport_db = pd.read_sql('SELECT airport_id, iata_code FROM airport', con=engine)
@@ -244,6 +275,4 @@ if __name__ == '__main__':
     # load_flight_data(engine,facts_flight_data )
 
     # load_flight_data(engine, facts_flight_data, chunksize=2000, disable_fk=True)
-
-
 

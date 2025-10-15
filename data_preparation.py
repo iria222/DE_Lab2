@@ -158,9 +158,14 @@ def prepare_circuit_data(circuit_data):
             'lng' : 'longitude',
             'alt' : 'altitude'
         }
+
     )
 
+
     circuit_data = handle_nulls(circuit_data)
+
+    circuit_data['altitude'] = circuit_data['altitude'].fillna(0)
+
 
     return circuit_data[['circuit_name', 'circuit_location', 'circuit_country', 'latitude', 'longitude', 'altitude']].drop_duplicates()
 

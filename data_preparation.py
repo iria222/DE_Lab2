@@ -248,8 +248,8 @@ def prepare_qualifying_data(qualifying_data, drivers_csv, constructors_csv, race
     return result.drop_duplicates()
 
 
-def prepare_pit_stops_data(pit_stops_data, drivers_csv, constructors_csv, races_csv,
-                           constructor_db, race_db, driver_db):
+def prepare_pit_stops_data(pit_stops_data, drivers_csv, races_csv,
+                           race_db, driver_db):
    
     _log_p("Preparing pit stop data...")
     
@@ -264,20 +264,16 @@ def prepare_pit_stops_data(pit_stops_data, drivers_csv, constructors_csv, races_
     races_csv_temp = races_csv[['raceId', 'year', 'name']].rename(columns={'name': 'race_name'})
     
     results_csv = pd.read_csv("Data/results.csv")
-    race_driver_to_constructor = results_csv[['raceId', 'driverId', 'constructorId']].drop_duplicates()
-    
-    constructor_name_map = constructors_csv[['constructorId', 'name']].rename(columns={'name': 'constructor_name'})
-    
+    race_driver_to_constructor = results_csv[['raceId', 'driverId']].drop_duplicates()
+        
     
     df = df.merge(drivers_csv_temp, on='driverId', how='left')
     
     df = df.merge(races_csv_temp, on='raceId', how='left')
     
     df = df.merge(race_driver_to_constructor, on=['raceId', 'driverId'], how='left')
-    
-    df = df.merge(constructor_name_map, on='constructorId', how='left')
-    
-    df.drop(columns=['driverId', 'forename', 'surname', 'raceId', 'constructorId'], inplace=True, errors='ignore')
+        
+    df.drop(columns=['driverId', 'forename', 'surname', 'raceId'], inplace=True, errors='ignore')
     
         
     _log_p("Mapping new IDs...")
@@ -292,21 +288,17 @@ def prepare_pit_stops_data(pit_stops_data, drivers_csv, constructors_csv, races_
                   on=['year', 'race_name'], how='left')
     df.drop(columns=['year', 'race_name'], inplace=True, errors='ignore')
                   
-    df = df.merge(constructor_db[['constructor_id', 'constructor_name']],
-                  on='constructor_name', how='left')
-    df.drop(columns=['constructor_name'], inplace=True, errors='ignore')
-
         
     rename_map = {
         'stop': 'stop_number', 'lap': 'lap_number', 'time': 'stop_time', 'milliseconds': 'stop_duration'
     }
     df = df.rename(columns=rename_map)
     
-    needed_columns = ['constructor_id', 'race_id', 'driver_id', 'stop_number', 'lap_number', 'stop_time', 'stop_duration']
+    needed_columns = ['race_id', 'driver_id', 'stop_number', 'lap_number', 'stop_time', 'stop_duration']
     existing_cols = [c for c in needed_columns if c in df.columns]
     result = df[existing_cols].copy()
     
-    null_counts = result[['driver_id', 'constructor_id', 'race_id']].isna().sum()
+    null_counts = result[['driver_id','race_id']].isna().sum()
     if null_counts.any():
         _log_p(f"WARNING: Unmapped IDs:\n{null_counts}")
     else:
@@ -314,8 +306,8 @@ def prepare_pit_stops_data(pit_stops_data, drivers_csv, constructors_csv, races_
     
     return result.drop_duplicates()
 
-def prepare_results_data(results_data, drivers_csv, constructors_csv, races_csv, circuits_csv, status_csv,
-                         circuit_db, constructor_db, race_db, driver_db, status_db):
+def prepare_results_data(results_data, drivers_csv, constructors_csv, races_csv, status_csv,
+                         constructor_db, race_db, driver_db, status_db):
 
     _log_r("Preparing results data...")
     
@@ -327,20 +319,16 @@ def prepare_results_data(results_data, drivers_csv, constructors_csv, races_csv,
     drivers_csv_temp['date_of_birth'] = pd.to_datetime(drivers_csv_temp['date_of_birth'], errors='coerce')
     constructors_csv_temp = constructors_csv[['constructorId', 'name']].rename(columns={'name': 'constructor_name'})
     races_csv_temp = races_csv[['raceId', 'year', 'name']].rename(columns={'name': 'race_name'})
-    race_circuit_names = races_csv[['raceId', 'circuitId']].merge(
-        circuits_csv[['circuitId', 'name']], on='circuitId', how='left'
-    ).rename(columns={'name': 'circuit_name'}).drop(columns=['circuitId'])
     status_csv_temp = status_csv[['statusId', 'status']]
     
     
     df = df.merge(drivers_csv_temp, on='driverId', how='left')
     df = df.merge(constructors_csv_temp, on='constructorId', how='left')
     df = df.merge(races_csv_temp, on='raceId', how='left')
-    df = df.merge(race_circuit_names, on='raceId', how='left')
     df = df.merge(status_csv_temp, on='statusId', how='left')
     df.drop(columns=['driverId', 'constructorId', 'raceId', 'statusId'], inplace=True, errors='ignore')
     
-    df = remove_rows_with_missing_keys(df, key_columns=['circuit_name', 'status'], logger_func=_log_r)
+    df = remove_rows_with_missing_keys(df, key_columns=['status'], logger_func=_log_r)
     
     _log_r("Mapping new IDs...")
     
@@ -358,11 +346,7 @@ def prepare_results_data(results_data, drivers_csv, constructors_csv, races_csv,
                   on=['year', 'race_name'], how='left')
     df.drop(columns=['year', 'race_name'], inplace=True, errors='ignore')
                   
-    circuit_db['circuit_name_clean'] = circuit_db['circuit_name'].astype(str).str.strip().str.lower()
-    df['circuit_name_clean'] = df['circuit_name'].astype(str).str.strip().str.lower()
-    df = df.merge(circuit_db[['circuit_id', 'circuit_name_clean']], on='circuit_name_clean', how='left')
-    df.drop(columns=['circuit_name', 'circuit_name_clean'], inplace=True, errors='ignore')
-                  
+      
     status_db['status_clean'] = status_db['status'].astype(str).str.strip().str.lower()
     df['status_clean'] = df['status'].astype(str).str.strip().str.lower()
     df = df.merge(status_db[['status_id', 'status_clean']], on='status_clean', how='left')
@@ -380,7 +364,7 @@ def prepare_results_data(results_data, drivers_csv, constructors_csv, races_csv,
     }
     df = df.rename(columns=rename_map)
     
-    needed_columns = ['circuit_id', 'constructor_id', 'race_id', 'driver_id', 'status_id',
+    needed_columns = ['constructor_id', 'race_id', 'driver_id', 'status_id',
                       'car_number', 'starting_position', 'final_position', 'position_order', 'points', 'laps']
     existing_cols = [c for c in needed_columns if c in df.columns]
     result = df[existing_cols].copy()
@@ -394,7 +378,7 @@ def prepare_results_data(results_data, drivers_csv, constructors_csv, races_csv,
         
         result['final_position'] = result['final_position'].astype(int)
 
-    id_cols = ['circuit_id', 'constructor_id', 'race_id', 'driver_id', 'status_id']
+    id_cols = ['constructor_id', 'race_id', 'driver_id', 'status_id']
     for col in id_cols:
         if col in result.columns:
             result[col] = pd.to_numeric(result[col], errors='coerce').astype(float)

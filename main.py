@@ -2,10 +2,6 @@ import pandas as pd
 from sqlalchemy import create_engine
 from data_preparation import *
 import json
-import gc
-import time
-import math
-import numpy as np
 
 
 
@@ -136,13 +132,12 @@ if __name__ == '__main__':
     )
     
     fact_pit_stops_data = prepare_pit_stops_data(
-        pit_stops_data, driver_data, constructor_data, race_data,
-        constructor_db, race_db, driver_db
+        pit_stops_data, driver_data, race_data,
+        race_db, driver_db
     )
     
     facts_results_data = prepare_results_data(
-        result_data, driver_data, constructor_data, race_data, circuit_data, status_data,
-        circuit_db, constructor_db, race_db, driver_db, status_db
+        result_data, driver_data, constructor_data, race_data, status_data, constructor_db, race_db, driver_db, status_db
     )
 
     load_qualifying_data(engine, facts_qualifying_data)

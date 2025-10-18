@@ -15,4 +15,5 @@ with the databases built in the previous step. The names of each of the
 databases are hardcoded in the correspondent python files.
 4. Install the necessary Python libraries. The requirements.txt file includes the library details.
 5. Run qualifying.py, pit stops.py and results.py.
+
 Note: The CSV files should be located in the Data folder.
